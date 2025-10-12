@@ -1,0 +1,12 @@
+﻿{
+  "name": "com.vertoker.assemblybuilder",
+  "displayName": "AssemblyBuilder",
+  "author": { "name": "vertoker", "url": "https://vertoker.net" },
+  "version": "1.0.0",
+  "unity": "2021.3",
+  "description": "A parallel hierarchy of .asmdef files (EDITOR ONLY)",
+  "keywords": [ "Assembly Definition", ".asmdef", "Assembly Builder", "Compilation" ],
+  "license": "MIT",
+  "category": "Compilation",
+  "dependencies": {}
+}
