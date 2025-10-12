@@ -18,7 +18,7 @@ just need to create `AssemblyBuilder` and add links to other `AssemblyBuilder`
 **How to install it?**
 - Via UPM (git url) - `https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder`
 - Via `manifest.json` - add new line `"com.vertoker.assemblybuilder": "https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder"`
-- Via `git clone` (if you want to contribute here) - `git clone https://github.com/vertoker/assemblybuilder.git Assets/Plugins/AssemblyBuilder`
+- Via `git clone` (if you want to contribute here) - `git clone https://github.com/vertoker/assemblybuilder.git`
 - Via `.zip` archive - just download package manually, extract and move to your project into `Assets/Plugins` concrete folder `Assets/AssemblyBuilder`
 
 **How to work with it?**
