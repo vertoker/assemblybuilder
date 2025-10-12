@@ -16,10 +16,10 @@ new project `.asmdef`, you must think to link it manually. With this solution - 
 just need to create `AssemblyBuilder` and add links to other `AssemblyBuilder`
 
 **How to install it?**
-- Via UPM (git url) - `https://github.com/vertoker/assemblybuilder.git`
-- Via `manifest.json` - add new line `"com.vertoker.assemblybuilder": "https://github.com/vertoker/assemblybuilder.git"`
-- Via `git submodule` (if you want to contribute here) - `git submodule add https://github.com/vertoker/assemblybuilder.git Assets/Plugins/AssemblyBuilder`
-- Via `.zip` archive - just download package manually, extract and move to your project into `Assets/Plugins`
+- Via UPM (git url) - `https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder`
+- Via `manifest.json` - add new line `"com.vertoker.assemblybuilder": "https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder"`
+- Via `git clone` (if you want to contribute here) - `git clone https://github.com/vertoker/assemblybuilder.git Assets/Plugins/AssemblyBuilder`
+- Via `.zip` archive - just download package manually, extract and move to your project into `Assets/Plugins` concrete folder `Assets/AssemblyBuilder`
 
 **How to work with it?**
 1. Create new / Select existed `.asmdef` file
