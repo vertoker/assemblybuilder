@@ -34,6 +34,17 @@ Steps 2-3 can be done in one action: select `.asmdef` files and use
 `Create/Scripting/AssemblyBuilder/AssemblyBuilder from AssemblyDefinition` (`Shift+Ctrl+F11`).
 It creates `AssemblyBuilder` near every selected file, with `.asmdef` file already added
 
+Step 7 can also be done from main menu, without selecting anything in project:
+- `Tools/AssemblyBuilder/Build All` (`Shift+Ctrl+B`) finds every builder in project,
+detects roots of their hierarchy and builds them. Every builder is built exactly once,
+so it doesn't matter, how many collections contain it
+- `Tools/AssemblyBuilder/Build Selected` builds only builders selected in project window,
+same as `Build` button of inspector
+
+Root is a builder, which no `AssemblyBuilderCollection` contains, building it covers
+whole it's branch. `parents` are not a part of build hierarchy, they only give references,
+so a parent is still built as it's own root
+
 **What you should know**
 - Use `readonly` option for builder, which `.asmdef` files you don't want to change. 
 It's usually files from `upm` and other _external_ packages in project itself
