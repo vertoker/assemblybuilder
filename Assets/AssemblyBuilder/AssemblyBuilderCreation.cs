@@ -37,18 +37,19 @@ namespace AssemblyBuilder
             }
         }
         
-        private static void CreateAssemblyBuilderFromAssemblyDefinition(Object target)
+        internal static void CreateAssemblyBuilderFromAssemblyDefinition(Object target)
         {
-            var assemblyDefinition = (AssemblyDefinitionAsset)target;
-            
             var sourceAsmdefFilePath = AssetDatabase.GetAssetPath(target);
-            // AssetDatabase works only with '/', but Path on Windows returns '\'
-            var folderPath = Path.GetDirectoryName(sourceAsmdefFilePath)?.Replace('\\', '/');
+            // GetDirectoryName throws on empty path and returns '\' separators on Windows,
+            // but AssetDatabase works only with '/'
+            var folderPath = string.IsNullOrEmpty(sourceAsmdefFilePath)
+                ? null
+                : Path.GetDirectoryName(sourceAsmdefFilePath)?.Replace('\\', '/');
             var assetName = Path.GetFileNameWithoutExtension(sourceAsmdefFilePath);
 
             if (string.IsNullOrEmpty(folderPath))
             {
-                Debug.LogWarning("Can't resolve asset path of [" + target.name + "], " +
+                Debug.LogWarning("Can't resolve asset path of selected AssemblyDefinition, " +
                                  "AssemblyBuilder is not created", target);
                 return;
             }
@@ -56,7 +57,7 @@ namespace AssemblyBuilder
             var newAssetFilePathWithName = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + assetName + ".asset");
 
             var newBuilder = ScriptableObject.CreateInstance<AssemblyBuilder>();
-            newBuilder._definitions.Add(assemblyDefinition);
+            newBuilder._definitions.Add((AssemblyDefinitionAsset)target);
 
             AssetDatabase.CreateAsset(newBuilder, newAssetFilePathWithName);
         }
