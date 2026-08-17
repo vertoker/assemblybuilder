@@ -35,7 +35,7 @@ Steps 2-3 can be done in one action: select `.asmdef` files and use
 It creates `AssemblyBuilder` near every selected file, with `.asmdef` file already added
 
 Step 7 can also be done from main menu, without selecting anything in project:
-- `Tools/AssemblyBuilder/Build All` (`Shift+Ctrl+B`) finds every builder in project,
+- `Tools/AssemblyBuilder/Build All` finds every builder in project,
 detects roots of their hierarchy and builds them. Every builder is built exactly once,
 so it doesn't matter, how many collections contain it
 - `Tools/AssemblyBuilder/Build Selected` builds only builders selected in project window,
