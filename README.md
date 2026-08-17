@@ -26,8 +26,13 @@ just need to create `AssemblyBuilder` and add links to other `AssemblyBuilder`
 2. Create new `AssemblyBuilder` asset (`Scripting/AssemblyBuilder/...`)
 3. Add selected `.asmdef` file into new `AssemblyBuilder`
 4. Add `parents` into this `AssemblyBuilder`
-5. (optional) Add into overall `AssemblyBuilderCollection` asset
-6. Click button `Build`
+5. (optional) Setup `inherit mode` of this `AssemblyBuilder`
+6. (optional) Add into overall `AssemblyBuilderCollection` asset
+7. Click button `Build`
+
+Steps 2-3 can be done in one action: select `.asmdef` files and use
+`Create/Scripting/AssemblyBuilder/AssemblyBuilder from AssemblyDefinition` (`Shift+Ctrl+F11`).
+It creates `AssemblyBuilder` near every selected file, with `.asmdef` file already added
 
 **What you should know**
 - Use `readonly` option for builder, which `.asmdef` files you don't want to change. 
@@ -36,13 +41,25 @@ It's usually files from `upm` and other _external_ packages in project itself
 in your inheritance tree. Even `.asmdef` files must have dependencies, 
 which other `.asmdef` files should doesn't know about
 - Use `public parents` by default
+- Use `inherit mode` to control depth of inheritance:
+`DeepInherit` (default) collects every parent through whole hierarchy,
+`Inherit` collects only nearest parents, without parents of parents,
+`NoInherit` collects nothing and clears `references` field
+- `inherit mode` of builder defines only it's own `references` field. `inherit mode`
+of it's parents doesn't affect this builder, so you can safely change it in any asset
+- Cyclic `parents` are not allowed, `.asmdef` files can't reference each other in a circle.
+Builder detects it, writes error into console and stops inheritance on this branch,
+but hierarchy still must be fixed manually
 - `AssemblyBuilder` allows to add several `.asmdef` files, but recommendation:
 use unique `AssemblyBuilder` for every `.asmdef` file
 - `AssemblyBuilder` also can be used without `.asmdef` file, in inheritance
 recursion, it uses as group of other `AssemblyBuilder`'s, 
 just add it into `public parents`
 - Use several `AssemblyBuilderCollection` assets, to collect all `AssemblyBuilder` assets
-in your project. This allows to setup all dependencies with single `Build` click
+in your project. This allows to setup all dependencies with single `Build` click.
+Collections can contain other collections, and one `AssemblyBuilder` can be added
+into several of them, it's built only once anyway. `Builders Count` field
+shows amount of unique builders inside collection
 - At the current moment, it changes only `references` field in `.asmdef` files, therefore
 everything else must be setup manually (but it can be changed)
 

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AssemblyBuilder.Model;
@@ -9,36 +9,45 @@ using UnityEngine.Serialization;
 
 namespace AssemblyBuilder
 {
-    [CreateAssetMenu(menuName = "Scripting/AssemblyBuilder/" + nameof(AssemblyBuilder), 
+    [CreateAssetMenu(menuName = "Scripting/AssemblyBuilder/" + nameof(AssemblyBuilder),
         fileName = nameof(AssemblyBuilder), order = 101)]
     public class AssemblyBuilder : BaseAssemblyBuilder
     {
-        [SerializeField] internal bool _readonly = false;
-        
+        [SerializeField] internal bool _readonly;
+
         [SerializeField] internal AssemblyInheritMode _inheritMode = AssemblyInheritMode.DeepInherit;
-        
+
         [FormerlySerializedAs("_parents")]
         [SerializeField] internal List<AssemblyBuilder> _publicParents = new();
         [SerializeField] internal List<AssemblyBuilder> _privateParents = new();
-        
+
         [SerializeField] internal List<AssemblyDefinitionAsset> _definitions = new();
-        
+
+        public IReadOnlyList<AssemblyBuilder> PublicParents => _publicParents;
+        public IReadOnlyList<AssemblyBuilder> PrivateParents => _privateParents;
+
+        public IReadOnlyList<AssemblyDefinitionAsset> Definitions => _definitions;
+
         public override void Build()
         {
-            BuildInternal();
+            BuildInternal(new HashSet<BaseAssemblyBuilder>());
             AssetDatabase.Refresh();
         }
-        
-        internal override void BuildInternal()
+
+        internal override void BuildInternal(HashSet<BaseAssemblyBuilder> visited)
         {
             if (_readonly) return;
-            
+            // same builder can be reached from several collections, build it only once
+            if (!visited.Add(this)) return;
+
             foreach (var definitionAsset in _definitions)
             {
+                if (!definitionAsset) continue;
+
                 var definitionModel = JsonUtility.FromJson<AssemblyDefinitionModel>(definitionAsset.text);
-                
+
                 BuildReferences(definitionModel);
-                
+
                 var definitionText = JsonUtility.ToJson(definitionModel, true);
                 File.WriteAllText(AssetDatabase.GetAssetPath(definitionAsset), definitionText);
             }
@@ -47,46 +56,93 @@ namespace AssemblyBuilder
         private void BuildReferences(AssemblyDefinitionModel definitionModel)
         {
             var references = new HashSet<string>();
-            var inherit = _inheritMode != AssemblyInheritMode.NoInherit;
-            CollectReferences(references, inherit);
+            // visited - every builder is collected once, path - current recursion branch
+            var visited = new HashSet<AssemblyBuilder> { this };
+            var path = new HashSet<AssemblyBuilder> { this };
+
+            // NoInherit - no parents at all
+            // Inherit - only top layer of parents
+            // DeepInherit - every parent, until recursion ends
+            // inherit mode of this builder defines whole traversal,
+            // inherit modes of it's parents don't affect it
+            if (_inheritMode != AssemblyInheritMode.NoInherit)
+                CollectReferences(references, visited, path, _inheritMode == AssemblyInheritMode.DeepInherit);
+
+            // cyclic parents can add this builder into it's own references
+            foreach (var definitionAsset in _definitions)
+            {
+                if (!definitionAsset) continue;
+                references.Remove(GetReferenceGuid(definitionAsset));
+            }
+
             definitionModel.references = references.ToList();
         }
 
-        private void CollectReferences(HashSet<string> references, bool inherit, bool first = true)
+        private void CollectReferences(HashSet<string> references, HashSet<AssemblyBuilder> visited,
+            HashSet<AssemblyBuilder> path, bool deep, bool first = true)
         {
-            // if NoInherit - return on first call (no parents)
-            // if Inherit - return on second call (top layer parents)
-            // if DeepInherit - never return, stop when every parent ends
-            if (!inherit) return;
-            
-            // current inherit apply effect only on next recursion call
-            var nextInherit = _inheritMode == AssemblyInheritMode.DeepInherit;
-            
             // public parents, using everytime until recursion ends
-            CollectReferences(_publicParents, references, nextInherit);
+            CollectReferences(_publicParents, references, visited, path, deep);
 
             if (!first) return;
             // private parents, using only once, on first recursion call
-            CollectReferences(_privateParents, references, nextInherit);
+            CollectReferences(_privateParents, references, visited, path, deep);
         }
 
-        private void CollectReferences(IReadOnlyList<AssemblyBuilder> parents, HashSet<string> references, bool nextInherit)
+        private void CollectReferences(IReadOnlyList<AssemblyBuilder> parents, HashSet<string> references,
+            HashSet<AssemblyBuilder> visited, HashSet<AssemblyBuilder> path, bool deep)
         {
-            // collect is pre-recursion: begins with stack build, ends with collection  
+            // collect is pre-recursion: begins with stack build, ends with collection
             // order: parents first, children in end
-            foreach (var parent in parents)
-                parent.CollectReferences(references, nextInherit, false);
+            // without deep it collects only definitions of this layer, without recursion
+            if (deep)
+            {
+                foreach (var parent in parents)
+                {
+                    if (!parent) continue;
+
+                    if (path.Contains(parent))
+                    {
+                        Debug.LogError($"Cyclic parent reference [{name}] -> [{parent.name}] detected, " +
+                                       "inheritance stopped on this branch", this);
+                        continue;
+                    }
+
+                    // parent is already collected through another branch, no need to walk it twice
+                    if (!visited.Add(parent)) continue;
+
+                    path.Add(parent);
+                    parent.CollectReferences(references, visited, path, true, false);
+                    path.Remove(parent);
+                }
+            }
 
             foreach (var parent in parents)
             {
+                if (!parent) continue;
+
                 foreach (var definitionAsset in parent._definitions)
                 {
-                    var assetPath = AssetDatabase.GetAssetPath(definitionAsset);
-                    var guid = AssetDatabase.AssetPathToGUID(assetPath);
-                    guid = $"GUID:{guid}";
+                    if (!definitionAsset) continue;
+
+                    var guid = GetReferenceGuid(definitionAsset);
+                    if (guid == null)
+                    {
+                        Debug.LogWarning($"Can't resolve GUID of AssemblyDefinition in [{parent.name}], " +
+                                         "reference skipped", parent);
+                        continue;
+                    }
+
                     references.Add(guid);
                 }
             }
+        }
+
+        private static string GetReferenceGuid(AssemblyDefinitionAsset definitionAsset)
+        {
+            var assetPath = AssetDatabase.GetAssetPath(definitionAsset);
+            var guid = AssetDatabase.AssetPathToGUID(assetPath);
+            return string.IsNullOrEmpty(guid) ? null : $"GUID:{guid}";
         }
     }
 }

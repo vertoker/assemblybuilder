@@ -1,9 +1,9 @@
 ﻿namespace AssemblyBuilder.Model
 {
-    public enum AssemblyInheritMode
+    public enum AssemblyInheritMode : byte
     {
-        NoInherit,
-        Inherit,
-        DeepInherit,
+        NoInherit = 0,
+        Inherit = 1,
+        DeepInherit = 2,
     }
 }

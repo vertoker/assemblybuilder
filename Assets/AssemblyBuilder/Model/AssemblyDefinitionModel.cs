@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace AssemblyBuilder.Model
 {
@@ -6,6 +7,7 @@ namespace AssemblyBuilder.Model
     /// Approximate model for AssemblyDefinition file.
     /// Unity doesn't have public model for this files
     /// </summary>
+    [Serializable]
     public class AssemblyDefinitionModel
     {
         public string name;

@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace AssemblyBuilder
 {
     public abstract class BaseAssemblyBuilder : ScriptableObject
     {
         public abstract void Build();
-        internal abstract void BuildInternal();
+        // visited protects from infinite recursion on cyclic builder references
+        internal abstract void BuildInternal(HashSet<BaseAssemblyBuilder> visited);
     }
 }

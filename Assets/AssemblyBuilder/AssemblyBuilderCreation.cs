@@ -15,7 +15,7 @@ namespace AssemblyBuilder
         {
             var targets = Selection.objects;
 
-            if (targets == null)
+            if (targets.Length == 0)
             {
                 Debug.LogWarning("A AssemblyDefinition file must first be selected in order to create a AssemblyBuilder");
                 return;
@@ -23,8 +23,10 @@ namespace AssemblyBuilder
 
             foreach (var target in targets)
             {
+                if (!target) continue;
+
                 // Make sure the selection is a AssemblyDefinition file
-                if (!target || target.GetType() != typeof(AssemblyDefinitionAsset))
+                if (target.GetType() != typeof(AssemblyDefinitionAsset))
                 {
                     Debug.LogWarning("Selected Object [" + target.name + "] is not a AssemblyDefinition file. " +
                                      "A AssemblyDefinition file must be selected in order to create a AssemblyBuilder", target);
@@ -40,9 +42,17 @@ namespace AssemblyBuilder
             var assemblyDefinition = (AssemblyDefinitionAsset)target;
             
             var sourceAsmdefFilePath = AssetDatabase.GetAssetPath(target);
-            var folderPath = Path.GetDirectoryName(sourceAsmdefFilePath);
+            // AssetDatabase works only with '/', but Path on Windows returns '\'
+            var folderPath = Path.GetDirectoryName(sourceAsmdefFilePath)?.Replace('\\', '/');
             var assetName = Path.GetFileNameWithoutExtension(sourceAsmdefFilePath);
-            
+
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                Debug.LogWarning("Can't resolve asset path of [" + target.name + "], " +
+                                 "AssemblyBuilder is not created", target);
+                return;
+            }
+
             var newAssetFilePathWithName = AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + assetName + ".asset");
 
             var newBuilder = ScriptableObject.CreateInstance<AssemblyBuilder>();
