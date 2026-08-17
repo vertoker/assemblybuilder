@@ -18,13 +18,13 @@ namespace AssemblyBuilder
         [SerializeField] internal AssemblyInheritMode _inheritMode = AssemblyInheritMode.DeepInherit;
 
         [FormerlySerializedAs("_parents")]
-        [SerializeField] internal List<AssemblyBuilder> _publicParents = new();
-        [SerializeField] internal List<AssemblyBuilder> _privateParents = new();
+        [SerializeField] internal List<BaseAssemblyBuilder> _publicParents = new();
+        [SerializeField] internal List<BaseAssemblyBuilder> _privateParents = new();
 
         [SerializeField] internal List<AssemblyDefinitionAsset> _definitions = new();
 
-        public IReadOnlyList<AssemblyBuilder> PublicParents => _publicParents;
-        public IReadOnlyList<AssemblyBuilder> PrivateParents => _privateParents;
+        public IReadOnlyList<BaseAssemblyBuilder> PublicParents => _publicParents;
+        public IReadOnlyList<BaseAssemblyBuilder> PrivateParents => _privateParents;
 
         public IReadOnlyList<AssemblyDefinitionAsset> Definitions => _definitions;
 
@@ -89,9 +89,36 @@ namespace AssemblyBuilder
             CollectReferences(_privateParents, references, visited, path, deep);
         }
 
-        private void CollectReferences(IReadOnlyList<AssemblyBuilder> parents, HashSet<string> references,
+        internal override void FlattenInto(List<AssemblyBuilder> result, HashSet<BaseAssemblyBuilder> expanded)
+        {
+            result.Add(this);
+        }
+
+        /// <summary>
+        /// Collections inside parents are unwrapped into builders they contain,
+        /// so traversal below works with plain builders only.
+        /// expanded is local to one list: same collection reached through another branch
+        /// is unwrapped again, exactly like a builder listed in two places
+        /// </summary>
+        private static List<AssemblyBuilder> Flatten(IReadOnlyList<BaseAssemblyBuilder> source)
+        {
+            var parents = new List<AssemblyBuilder>(source.Count);
+            var expanded = new HashSet<BaseAssemblyBuilder>();
+
+            foreach (var parent in source)
+            {
+                if (!parent) continue;
+                parent.FlattenInto(parents, expanded);
+            }
+
+            return parents;
+        }
+
+        private void CollectReferences(IReadOnlyList<BaseAssemblyBuilder> source, HashSet<string> references,
             HashSet<AssemblyBuilder> visited, HashSet<AssemblyBuilder> path, bool deep)
         {
+            var parents = Flatten(source);
+
             // collect is pre-recursion: begins with stack build, ends with collection
             // order: parents first, children in end
             // without deep it collects only definitions of this layer, without recursion
@@ -99,8 +126,6 @@ namespace AssemblyBuilder
             {
                 foreach (var parent in parents)
                 {
-                    if (!parent) continue;
-
                     if (path.Contains(parent))
                     {
                         Debug.LogError($"Cyclic parent reference [{name}] -> [{parent.name}] detected, " +
@@ -117,10 +142,9 @@ namespace AssemblyBuilder
                 }
             }
 
+            // parents are already flattened and filtered from nulls
             foreach (var parent in parents)
             {
-                if (!parent) continue;
-
                 foreach (var definitionAsset in parent._definitions)
                 {
                     if (!definitionAsset) continue;

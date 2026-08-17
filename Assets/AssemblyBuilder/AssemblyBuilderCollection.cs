@@ -28,6 +28,18 @@ namespace AssemblyBuilder
             }
         }
 
+        internal override void FlattenInto(List<AssemblyBuilder> result, HashSet<BaseAssemblyBuilder> expanded)
+        {
+            // collection can contain itself (directly or through other collections)
+            if (!expanded.Add(this)) return;
+
+            foreach (var builder in _builders)
+            {
+                if (!builder) continue;
+                builder.FlattenInto(result, expanded);
+            }
+        }
+
         public int CountBuilders()
         {
             return CountBuilders(new HashSet<BaseAssemblyBuilder>());

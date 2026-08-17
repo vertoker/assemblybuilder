@@ -66,6 +66,10 @@ use unique `AssemblyBuilder` for every `.asmdef` file
 - `AssemblyBuilder` also can be used without `.asmdef` file, in inheritance
 recursion, it uses as group of other `AssemblyBuilder`'s, 
 just add it into `public parents`
+- `AssemblyBuilderCollection` can be added into `public parents` and `private parents` too.
+There it works as transparent group: it stands for builders inside it, not for a layer
+of inheritance, so it gives the same result as adding these builders one by one.
+Nested collections are unwrapped the same way
 - Use several `AssemblyBuilderCollection` assets, to collect all `AssemblyBuilder` assets
 in your project. This allows to setup all dependencies with single `Build` click.
 Collections can contain other collections, and one `AssemblyBuilder` can be added
