@@ -15,13 +15,13 @@ I have several reasons, why you should use it, instead of default `.asmdef`
 new project `.asmdef`, you must think to link it manually. With this solution - you 
 just need to create `AssemblyBuilder` and add links to other `AssemblyBuilder`
 
-**How to install it?**
+### How to install it?
 - Via UPM (git url) - `https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder`
 - Via `manifest.json` - add new line `"com.vertoker.assemblybuilder": "https://github.com/vertoker/assemblybuilder.git?path=/Assets/AssemblyBuilder"`
 - Via `git clone` (if you want to contribute here) - `git clone https://github.com/vertoker/assemblybuilder.git`
 - Via `.zip` archive - just download package manually, extract and move to your project into `Assets/Plugins` concrete folder `Assets/AssemblyBuilder`
 
-**How to work with it?**
+### How to work with it?
 1. Create new / Select existed `.asmdef` file
 2. Create new `AssemblyBuilder` asset (`Scripting/AssemblyBuilder/...`)
 3. Add selected `.asmdef` file into new `AssemblyBuilder`
@@ -46,7 +46,7 @@ so a branch of hierarchy is never left half updated. Root is a builder, which no
 `AssemblyBuilderCollection` contains, `Build All` starts from roots, and every builder
 is built exactly once, no matter through how many paths it's reached
 
-**What you should know**
+### What you should know
 - Use `readonly` option for builder, which `.asmdef` files you don't want to change. 
 It's usually files from `upm` and other _external_ packages in project itself
 - Use `public parents` and `private parents` to create incapsulation 
@@ -81,4 +81,4 @@ shows amount of unique builders inside collection
 - At the current moment, it changes only `references` field in `.asmdef` files, therefore
 everything else must be setup manually (but it can be changed)
 
-This package is in development, I open to any MR that you sent to project
+This package is complete, but I open to any MR that you sent to project
