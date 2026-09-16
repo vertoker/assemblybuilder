@@ -26,6 +26,8 @@ namespace AssemblyBuilder.Tests
             first._publicParents.Add(second);
             second._publicParents.Add(first);
 
+            // build goes up through parents, so both sides of cycle are built and both report it
+            LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             BuildWithoutRefresh(first);
 
@@ -43,8 +45,11 @@ namespace AssemblyBuilder.Tests
             first._publicParents.Add(second);
             second._publicParents.Add(first);
 
+            // every build covers both sides of cycle already, second build only repeats it
+            LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             BuildWithoutRefresh(first);
+            LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             BuildWithoutRefresh(second);
 
@@ -81,6 +86,9 @@ namespace AssemblyBuilder.Tests
             second._publicParents.Add(third);
             third._publicParents.Add(first);
 
+            // every builder of cycle is built and reports the cycle from it's own side
+            LogAssert.Expect(LogType.Error, CyclicError);
+            LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             BuildWithoutRefresh(first);
 
@@ -117,11 +125,13 @@ namespace AssemblyBuilder.Tests
             first._publicParents.Add(second);
             second._publicParents.Add(first);
 
+            // references are collected for every definition, so first reports twice,
+            // and second, built as a parent, reports once for it's own definition
+            LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             LogAssert.Expect(LogType.Error, CyclicError);
             BuildWithoutRefresh(first);
 
-            // references are collected for every definition, so error is reported twice
             AssertReferences(firstDefinition, secondDefinition);
             AssertReferences(extraDefinition, secondDefinition);
         }
@@ -136,7 +146,9 @@ namespace AssemblyBuilder.Tests
             var second = CreateBuilder(secondDefinition);
             first._publicParents.Add(second);
             second._publicParents.Add(first);
+            // build covers both sides of cycle, so both of them must stay silent
             first._inheritMode = AssemblyInheritMode.Inherit;
+            second._inheritMode = AssemblyInheritMode.Inherit;
 
             // without recursion there is nothing to cut, unexpected error fails this test
             BuildWithoutRefresh(first);

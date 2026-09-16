@@ -41,9 +41,10 @@ so it doesn't matter, how many collections contain it
 - `Tools/AssemblyBuilder/Build Selected` builds only builders selected in project window,
 same as `Build` button of inspector
 
-Root is a builder, which no `AssemblyBuilderCollection` contains, building it covers
-whole it's branch. `parents` are not a part of build hierarchy, they only give references,
-so a parent is still built as it's own root
+Build goes up: building a builder also builds every it's `parent`, through whole depth,
+so a branch of hierarchy is never left half updated. Root is a builder, which no
+`AssemblyBuilderCollection` contains, `Build All` starts from roots, and every builder
+is built exactly once, no matter through how many paths it's reached
 
 **What you should know**
 - Use `readonly` option for builder, which `.asmdef` files you don't want to change. 
@@ -60,7 +61,9 @@ which other `.asmdef` files should doesn't know about
 of it's parents doesn't affect this builder, so you can safely change it in any asset
 - Cyclic `parents` are not allowed, `.asmdef` files can't reference each other in a circle.
 Builder detects it, writes error into console and stops inheritance on this branch,
-but hierarchy still must be fixed manually
+but hierarchy still must be fixed manually. Build covers every builder of a cycle,
+so every one of them reports it from it's own side
+- `readonly` builder is never written, but build still goes up through it's `parents`
 - `AssemblyBuilder` allows to add several `.asmdef` files, but recommendation:
 use unique `AssemblyBuilder` for every `.asmdef` file
 - `AssemblyBuilder` also can be used without `.asmdef` file, in inheritance

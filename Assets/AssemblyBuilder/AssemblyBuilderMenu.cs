@@ -29,7 +29,6 @@ namespace AssemblyBuilder
 
             AssetDatabase.Refresh();
 
-            // readonly builders are skipped by build itself, so visited can be smaller than found
             Debug.Log($"{nameof(AssemblyBuilder)}: built {visited.Count} of {builders.Count} builder(s) " +
                       $"from {roots.Count} root(s)");
         }
@@ -78,8 +77,9 @@ namespace AssemblyBuilder
 
         /// <summary>
         /// Root is a builder no collection references, building it covers whole it's branch.
-        /// Parents of <see cref="AssemblyBuilder"/> are not a part of build hierarchy,
-        /// they only give references, so a parent still needs it's own root
+        /// Parents are built through their children, but they still stay roots:
+        /// a builder is built only once anyway, and this way nothing depends
+        /// on a child existing somewhere below
         /// </summary>
         internal static List<BaseAssemblyBuilder> CollectRoots(IReadOnlyList<BaseAssemblyBuilder> builders)
         {

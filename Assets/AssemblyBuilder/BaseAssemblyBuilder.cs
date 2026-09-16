@@ -6,7 +6,12 @@ namespace AssemblyBuilder
     public abstract class BaseAssemblyBuilder : ScriptableObject
     {
         public abstract void Build();
-        // visited protects from infinite recursion on cyclic builder references
+        /// <summary>
+        /// Builds this asset and everything above it: parents of a builder
+        /// and builders of a collection, through whole depth.
+        /// visited protects from infinite recursion on cyclic builder references
+        /// and keeps every builder built exactly once
+        /// </summary>
         internal abstract void BuildInternal(HashSet<BaseAssemblyBuilder> visited);
 
         /// <summary>

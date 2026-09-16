@@ -36,9 +36,16 @@ namespace AssemblyBuilder
 
         internal override void BuildInternal(HashSet<BaseAssemblyBuilder> visited)
         {
-            if (_readonly) return;
-            // same builder can be reached from several collections, build it only once
+            // same builder can be reached from several collections and children, build it only once.
+            // it also stops build on cyclic parents
             if (!visited.Add(this)) return;
+
+            // parents are a part of build hierarchy, child can't be up to date, while it's parent is not
+            BuildParents(_publicParents, visited);
+            BuildParents(_privateParents, visited);
+
+            // readonly forbids writing into own definitions, but not building parents above
+            if (_readonly) return;
 
             foreach (var definitionAsset in _definitions)
             {
@@ -50,6 +57,17 @@ namespace AssemblyBuilder
 
                 var definitionText = JsonUtility.ToJson(definitionModel, true);
                 File.WriteAllText(AssetDatabase.GetAssetPath(definitionAsset), definitionText);
+            }
+        }
+
+        private static void BuildParents(IReadOnlyList<BaseAssemblyBuilder> parents,
+            HashSet<BaseAssemblyBuilder> visited)
+        {
+            // collection in parents is built as a group of builders, same as it is in references
+            foreach (var parent in parents)
+            {
+                if (!parent) continue;
+                parent.BuildInternal(visited);
             }
         }
 
